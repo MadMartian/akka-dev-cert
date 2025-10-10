@@ -56,6 +56,15 @@ public record Timeslot(Set<Booking> bookings, Set<Participant> available) {
         bookings.stream().filter(b -> !b.bookingId().equals(bookingId)).collect(Collectors.toSet());
     return new Timeslot(books, available);
   }
+  
+  public Timeslot cancelParticipant(String bookingId, String participantId, ParticipantType participantType) {
+    Set<Booking> books = bookings.stream()
+            .filter(b -> !(b.bookingId().equals(bookingId)
+                    && b.participant().id().equals(participantId)
+                    && b.participant().participantType().equals(participantType)))
+            .collect(Collectors.toSet());
+    return new Timeslot(books, available);
+  }
 
   public record Booking(Participant participant, String bookingId) {}
 }

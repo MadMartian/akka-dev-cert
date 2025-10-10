@@ -11,26 +11,30 @@ public class ParticipantSlotEntity
         extends EventSourcedEntity<ParticipantSlotEntity.State, ParticipantSlotEntity.Event> {
 
     public Effect<Done> unmarkAvailable(ParticipantSlotEntity.Commands.UnmarkAvailable unmark) {
-        // Supply your own implementation
-        return effects().reply(Done.done());
+        return effects()
+                .persist(new Event.UnmarkedAvailable(unmark.slotId, unmark.participantId, unmark.participantType))
+                .thenReply(state -> Done.done());
     }
 
     public Effect<Done> markAvailable(ParticipantSlotEntity.Commands.MarkAvailable mark) {
-        // Supply your own implementation
-        return effects().reply(Done.done());
+        return effects()
+                .persist(new Event.MarkedAvailable(mark.slotId, mark.participantId, mark.participantType))
+                .thenReply(state -> Done.done());
     }
 
     public Effect<Done> book(ParticipantSlotEntity.Commands.Book book) {
-        // Supply your own implementation
-        return effects().reply(Done.done());
+        return effects()
+                .persist(new Event.Booked(book.slotId, book.participantId, book.participantType, book.bookingId))
+                .thenReply(state -> Done.done());
     }
 
     public Effect<Done> cancel(ParticipantSlotEntity.Commands.Cancel cancel) {
-        // Supply your own implementation
-        return effects().reply(Done.done());
+        return effects()
+                .persist(new Event.Canceled(cancel.slotId, cancel.participantId, cancel.participantType, cancel.bookingId))
+                .thenReply(state -> Done.done());
     }
 
-    record State(
+    public record State(
             String slotId, String participantId, ParticipantType participantType, String status) {
     }
 
@@ -80,7 +84,19 @@ public class ParticipantSlotEntity
 
     @Override
     public ParticipantSlotEntity.State applyEvent(ParticipantSlotEntity.Event event) {
-        // Supply your own implementation
-        return null;
+        return switch (event) {
+            case Event.MarkedAvailable e ->
+                new State(e.slotId(), e.participantId(), e.participantType(),
+                          ParticipantSlotsView.SlotRow.STATUS_AVAILABLE);
+            case Event.UnmarkedAvailable e ->
+                new State(e.slotId(), e.participantId(), e.participantType(),
+                          ParticipantSlotsView.SlotRow.STATUS_UNAVAILABLE);
+            case Event.Booked e ->
+                new State(e.slotId(), e.participantId(), e.participantType(),
+                          ParticipantSlotsView.SlotRow.STATUS_BOOKED);
+            case Event.Canceled e ->
+                new State(e.slotId(), e.participantId(), e.participantType(),
+                          ParticipantSlotsView.SlotRow.STATUS_AVAILABLE);
+        };
     }
 }
